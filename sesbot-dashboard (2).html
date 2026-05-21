@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SesBot TR — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Geist',sans-serif;background:#080810;color:#e8e8f0;min-height:100vh;-webkit-font-smoothing:antialiased;}
+:root{
+  --bg:#080810;--bg1:#0e0e1a;--bg2:#13131f;--bg3:#1a1a2a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8e8f0;--muted:#8888aa;--faint:#44445a;
+  --violet:#7c5cfc;--violet2:#9d82ff;--glow:rgba(124,92,252,0.15);
+  --teal:#00e5b0;--amber:#fbbf24;--rose:#fb7185;--green:#4ade80;
+  --r:12px;--r-sm:8px;
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#2a2a40;border-radius:2px}
+
+/* ── SHELL ── */
+.shell{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:210px;flex-shrink:0;
+  background:var(--bg1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+}
+.sidebar-logo{
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.logo-badge{width:26px;height:26px;border-radius:7px;background:var(--violet);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.logo-txt{font-family:'Instrument Serif',serif;font-size:17px;color:var(--text);}
+.logo-txt span{color:var(--violet2);}
+.nav-sec{padding:14px 10px 4px;font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;margin:1px 5px;border-radius:var(--r-sm);font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+.ni:hover{background:var(--bg2);color:var(--text);}
+.ni.on{background:rgba(124,92,252,.14);color:var(--violet2);font-weight:500;}
+.ni .ico{font-size:15px;width:18px;text-align:center;}
+.nb{margin-left:auto;padding:1px 7px;background:var(--violet);color:#fff;font-size:10px;border-radius:10px;font-weight:600;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:54px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:var(--bg1);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:10;flex-shrink:0;
+}
+.tb-left{display:flex;align-items:center;gap:10px;}
+.tb-title{font-size:14px;font-weight:500;color:var(--text);}
+.tb-sub{font-size:12px;color:var(--faint);}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.period-btn{
+  padding:5px 12px;font-size:12px;font-family:'Geist',sans-serif;
+  background:var(--bg2);color:var(--muted);
+  border:1px solid var(--border2);border-radius:6px;cursor:pointer;
+  transition:all .15s;
+}
+.period-btn.on,.period-btn:hover{background:rgba(124,92,252,.15);color:var(--violet2);border-color:rgba(124,92,252,.3);}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--teal);padding:5px 10px;background:rgba(0,229,176,.08);border:1px solid rgba(0,229,176,.2);border-radius:6px;}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:ld 1.4s ease-in-out infinite;}
+@keyframes ld{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── CONTENT ── */
+.content{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+
+/* ── METRİK KARTLAR ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.mc{
+  background:var(--bg1);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px 18px;
+  position:relative;overflow:hidden;transition:border-color .2s;
+}
+.mc:hover{border-color:var(--border2);}
+.mc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity .3s;
+}
+.mc:hover::before{opacity:1;}
+.mc.v::before{background:linear-gradient(90deg,var(--violet),var(--violet2));}
+.mc.t::before{background:linear-gradient(90deg,var(--teal),#00b87d);}
+.mc.a::before{background:linear-gradient(90deg,var(--amber),#f97316);}
+.mc.r::before{background:linear-gradient(90deg,var(--rose),#e879a0);}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.mc-label{font-size:11.5px;color:var(--muted);font-weight:500;}
+.mc-icon{font-size:16px;}
+.mc-val{font-family:'Instrument Serif',serif;font-size:30px;color:#fff;line-height:1;margin-bottom:4px;}
+.mc-delta{font-size:11px;display:flex;align-items:center;gap:4px;}
+.delta-up{color:var(--teal);}
+.delta-dn{color:var(--rose);}
+.mc-spark{height:32px;margin-top:8px;}
+
+/* ── GRAFİK KARTLAR ── */
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;}
+.charts-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.chart-card{
+  background:var(--bg1);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px 18px;
+}
+.cc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cc-title{font-size:13px;font-weight:600;color:var(--text);}
+.cc-sub{font-size:11px;color:var(--faint);margin-top:1px;}
+.cc-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.badge-up{background:rgba(0,229,176,.12);color:var(--teal);}
+.badge-dn{background:rgba(251,113,133,.12);color:var(--rose);}
+.badge-v{background:rgba(124,92,252,.12);color:var(--violet2);}
+.chart-wrap{position:relative;}
+
+/* ── AJAN DURUM ── */
+.agents-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.agent-card{
+  background:var(--bg1);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;
+}
+.ag-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.ag-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ag-av.f{background:linear-gradient(135deg,#7c5cfc,#fb7185);}
+.ag-av.m{background:linear-gradient(135deg,#0ea5e9,#6366f1);}
+.ag-name{font-size:13px;font-weight:600;color:var(--text);}
+.ag-type{font-size:11px;color:var(--muted);}
+.status-dot{width:7px;height:7px;border-radius:50%;margin-left:auto;}
+.sd-on{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.sd-off{background:var(--faint);}
+.ag-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ag-stat{background:var(--bg2);border-radius:6px;padding:8px 10px;text-align:center;}
+.ag-stat-val{font-size:16px;font-weight:600;color:#fff;}
+.ag-stat-lbl{font-size:10px;color:var(--faint);margin-top:2px;}
+
+/* ── SON ÇAĞRILAR ── */
+.calls-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.call-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);}
+.call-row:last-child{border-bottom:none;padding-bottom:0;}
+.call-num{font-size:12.5px;color:var(--text);width:130px;flex-shrink:0;}
+.call-agent{font-size:12px;color:var(--muted);flex:1;}
+.call-dur{font-size:12px;color:var(--muted);width:40px;text-align:right;}
+.call-badge{font-size:10px;padding:2px 9px;border-radius:10px;font-weight:600;margin-left:8px;}
+.cb-ok{background:rgba(0,229,176,.12);color:var(--teal);}
+.cb-tr{background:rgba(251,191,36,.12);color:var(--amber);}
+.cb-ms{background:rgba(251,113,133,.12);color:var(--rose);}
+.call-mood{font-size:13px;margin-left:6px;}
+
+/* ── BADGE STİLLERİ ── */
+.nb{margin-left:auto;padding:1px 7px;background:var(--violet);color:#fff;font-size:10px;border-radius:10px;font-weight:700;min-width:20px;text-align:center;transition:all .3s;}
+.nb-red{background:var(--rose);}
+.nb-teal{background:var(--teal);color:#000;}
+.nb-amber{background:var(--amber);color:#000;}
+.nb-rose{background:var(--rose);font-size:12px;}
+.nb-pulse{animation:nb-pulse 2s ease-in-out infinite;}
+@keyframes nb-pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,92,252,.5)}50%{box-shadow:0 0 0 4px rgba(124,92,252,0)}}
+@keyframes bell-pulse{0%,100%{box-shadow:0 0 0 0 rgba(251,113,133,.5)}50%{box-shadow:0 0 0 4px rgba(251,113,133,0)}}
+
+/* Bildirim item */
+.notif-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;
+  position:relative;
+}
+.notif-item:hover{background:var(--bg2);}
+.notif-item.unread{background:rgba(124,92,252,.04);}
+.notif-item.unread::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--violet);
+}
+.notif-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.notif-text{flex:1;min-width:0;}
+.notif-title{font-size:12.5px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.notif-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+.notif-time{font-size:10px;color:var(--faint);margin-top:3px;}
+
+/* Popup bildirim toast */
+.popup-notif{
+  position:fixed;bottom:24px;right:24px;
+  width:300px;
+  background:var(--bg1);border:1px solid var(--border2);
+  border-radius:var(--r);padding:14px 16px;
+  z-index:2000;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  transform:translateX(340px);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.popup-notif.show{transform:translateX(0);}
+.pn-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.pn-close{position:absolute;top:8px;right:10px;font-size:16px;color:var(--faint);cursor:pointer;line-height:1;}
+.pn-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.pn-sub{font-size:11.5px;color:var(--muted);line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">🎙</div>
+    <div class="logo-txt">SesBot<span>TR</span></div>
+  </div>
+  <div class="nav-sec">Genel</div>
+  <div class="ni on"><span class="ico">📊</span>Dashboard</div>
+  <div class="ni" onclick="showNotif('ajanlar')"><span class="ico">🤖</span>Ajanlarım <span class="nb nb-pulse" id="nb-ajanlar">3</span></div>
+  <div class="ni" onclick="showNotif('cagrilar')"><span class="ico">📞</span>Çağrılar <span class="nb nb-red" id="nb-cagrilar">12</span></div>
+  <div class="ni" onclick="showNotif('randevular')"><span class="ico">📅</span>Randevular <span class="nb nb-teal" id="nb-randevular">15</span></div>
+  <div class="ni" onclick="showNotif('mesajlar')"><span class="ico">💬</span>Mesajlar <span class="nb nb-amber" id="nb-mesajlar">7</span></div>
+  <div class="ni"><span class="ico">📈</span>Analizler</div>
+  <div class="nav-sec">Yapılandırma</div>
+  <div class="ni" onclick="showNotif('ayarlar')"><span class="ico">⚙️</span>Ajan Ayarları</div>
+  <div class="ni"><span class="ico">📝</span>Senaryolar</div>
+  <div class="ni" onclick="showNotif('entegrasyon')"><span class="ico">🔗</span>Entegrasyonlar <span class="nb nb-rose" id="nb-entegrasyon">!</span></div>
+  <div class="nav-sec">Hesap</div>
+  <div class="ni"><span class="ico">💳</span>Faturalama</div>
+  <div class="ni"><span class="ico">👥</span>Ekip</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div>
+        <div class="tb-title">Dashboard</div>
+        <div class="tb-sub">Acme Teknoloji A.Ş. · Bugün 21 Mayıs 2026</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <button class="period-btn" onclick="setPeriod(this,'7g')">7 Gün</button>
+      <button class="period-btn on" onclick="setPeriod(this,'30g')">30 Gün</button>
+      <button class="period-btn" onclick="setPeriod(this,'3a')">3 Ay</button>
+      <div class="live-badge"><div class="ld"></div>Canlı</div>
+      <!-- Bildirim zili -->
+      <div style="position:relative;cursor:pointer;" onclick="toggleNotifPanel()">
+        <div style="width:34px;height:34px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;" onmouseover="this.style.borderColor='var(--violet)'" onmouseout="this.style.borderColor='var(--border2)'">🔔</div>
+        <div id="bell-badge" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--rose);border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;animation:bell-pulse 2s ease-in-out infinite;">5</div>
+      </div>
+      <!-- Kullanıcı avatarı -->
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--rose));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;cursor:pointer;flex-shrink:0;">AT</div>
+    </div>
+    <!-- Bildirim Paneli -->
+    <div id="notif-panel" style="display:none;position:fixed;top:62px;right:16px;width:320px;background:var(--bg1);border:1px solid var(--border2);border-radius:var(--r);z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Bildirimler</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--violet2);cursor:pointer;" onclick="markAllRead()">Tümünü okundu işaretle</span>
+          <span style="font-size:16px;cursor:pointer;color:var(--muted);" onclick="toggleNotifPanel()">×</span>
+        </div>
+      </div>
+      <div id="notif-list" style="max-height:380px;overflow-y:auto;">
+        <!-- Bildirimler JS ile dolacak -->
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center;">
+        <span style="font-size:12px;color:var(--violet2);cursor:pointer;">Tüm bildirimleri gör →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- METRİKLER -->
+    <div class="metrics">
+      <div class="mc v">
+        <div class="mc-top">
+          <div class="mc-label">Toplam Çağrı</div>
+          <div class="mc-icon">📞</div>
+        </div>
+        <div class="mc-val">8.432</div>
+        <div class="mc-delta delta-up">↑ %18 geçen aya göre</div>
+        <div class="mc-spark"><canvas id="spark1"></canvas></div>
+      </div>
+      <div class="mc t">
+        <div class="mc-top">
+          <div class="mc-label">Randevu Alındı</div>
+          <div class="mc-icon">📅</div>
+        </div>
+        <div class="mc-val">1.284</div>
+        <div class="mc-delta delta-up">↑ %23 geçen aya göre</div>
+        <div class="mc-spark"><canvas id="spark2"></canvas></div>
+      </div>
+      <div class="mc a">
+        <div class="mc-top">
+          <div class="mc-label">Ürün Satışı</div>
+          <div class="mc-icon">🛒</div>
+        </div>
+        <div class="mc-val">342</div>
+        <div class="mc-delta delta-up">↑ %11 geçen aya göre</div>
+        <div class="mc-spark"><canvas id="spark3"></canvas></div>
+      </div>
+      <div class="mc r">
+        <div class="mc-top">
+          <div class="mc-label">Aylık Gelir</div>
+          <div class="mc-icon">💰</div>
+        </div>
+        <div class="mc-val">$4.820</div>
+        <div class="mc-delta delta-up">↑ %31 geçen aya göre</div>
+        <div class="mc-spark"><canvas id="spark4"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ANA GRAFİKLER -->
+    <div class="charts-row">
+      <!-- Çağrı trendi -->
+      <div class="chart-card">
+        <div class="cc-head">
+          <div>
+            <div class="cc-title">Çağrı & Randevu Trendi</div>
+            <div class="cc-sub">Son 30 gün</div>
+          </div>
+          <span class="cc-badge badge-up">↑ %18</span>
+        </div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chart-calls"></canvas>
+        </div>
+      </div>
+
+      <!-- Gelir/Gider -->
+      <div class="chart-card">
+        <div class="cc-head">
+          <div>
+            <div class="cc-title">Gelir / Gider</div>
+            <div class="cc-sub">Aylık karşılaştırma</div>
+          </div>
+          <span class="cc-badge badge-v">Net: $3.210</span>
+        </div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chart-revenue"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALT GRAFİKLER -->
+    <div class="charts-row2">
+
+      <!-- Çözüm oranı donut -->
+      <div class="chart-card">
+        <div class="cc-head">
+          <div>
+            <div class="cc-title">Çözüm Oranı</div>
+            <div class="cc-sub">Bu ay</div>
+          </div>
+          <span class="cc-badge badge-up">%87</span>
+        </div>
+        <div class="chart-wrap" style="height:140px">
+          <canvas id="chart-donut"></canvas>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--teal)"></div>Çözüldü %87
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--amber)"></div>Aktarıldı %9
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--faint)"></div>Yarım %4
+          </div>
+        </div>
+      </div>
+
+      <!-- Ürün satışı -->
+      <div class="chart-card">
+        <div class="cc-head">
+          <div>
+            <div class="cc-title">Ürün Satışı</div>
+            <div class="cc-sub">Kategori bazında</div>
+          </div>
+          <span class="cc-badge badge-up">↑ %11</span>
+        </div>
+        <div class="chart-wrap" style="height:140px">
+          <canvas id="chart-sales"></canvas>
+        </div>
+      </div>
+
+      <!-- Saatlik yoğunluk -->
+      <div class="chart-card">
+        <div class="cc-head">
+          <div>
+            <div class="cc-title">Saatlik Yoğunluk</div>
+            <div class="cc-sub">Bugün</div>
+          </div>
+          <span class="cc-badge badge-v">Zirve 14:00</span>
+        </div>
+        <div class="chart-wrap" style="height:140px">
+          <canvas id="chart-hourly"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- AJAN DURUMU + SON ÇAĞRILAR -->
+    <div class="agents-row">
+
+      <!-- Aktif ajanlar -->
+      <div class="chart-card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="cc-head" style="margin-bottom:4px;">
+          <div><div class="cc-title">Aktif Ajanlar</div><div class="cc-sub">Anlık durum</div></div>
+        </div>
+        <div class="agent-card" style="background:var(--bg2);border-color:rgba(0,229,176,.15);">
+          <div class="ag-head">
+            <div class="ag-av f">♀</div>
+            <div><div class="ag-name">Kaya</div><div class="ag-type">Müşteri Destek · Türkçe</div></div>
+            <div class="status-dot sd-on"></div>
+          </div>
+          <div class="ag-stats">
+            <div class="ag-stat"><div class="ag-stat-val" style="color:var(--teal)">48</div><div class="ag-stat-lbl">Aktif</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">312</div><div class="ag-stat-lbl">Bugün</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">%91</div><div class="ag-stat-lbl">Başarı</div></div>
+          </div>
+        </div>
+        <div class="agent-card" style="background:var(--bg2);">
+          <div class="ag-head">
+            <div class="ag-av m">♂</div>
+            <div><div class="ag-name">Eren</div><div class="ag-type">Randevu · Türkçe</div></div>
+            <div class="status-dot sd-on"></div>
+          </div>
+          <div class="ag-stats">
+            <div class="ag-stat"><div class="ag-stat-val" style="color:var(--teal)">31</div><div class="ag-stat-lbl">Aktif</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">187</div><div class="ag-stat-lbl">Bugün</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">%88</div><div class="ag-stat-lbl">Başarı</div></div>
+          </div>
+        </div>
+        <div class="agent-card" style="background:var(--bg2);">
+          <div class="ag-head">
+            <div class="ag-av f" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">♀</div>
+            <div><div class="ag-name">Ayşe</div><div class="ag-type">Satış · Türkçe/İng</div></div>
+            <div class="status-dot sd-off"></div>
+          </div>
+          <div class="ag-stats">
+            <div class="ag-stat"><div class="ag-stat-val" style="color:var(--faint)">0</div><div class="ag-stat-lbl">Aktif</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">94</div><div class="ag-stat-lbl">Bugün</div></div>
+            <div class="ag-stat"><div class="ag-stat-val">%84</div><div class="ag-stat-lbl">Başarı</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Son çağrılar -->
+      <div class="calls-card">
+        <div class="cc-head" style="margin-bottom:10px;">
+          <div><div class="cc-title">Son Çağrılar</div><div class="cc-sub">Gerçek zamanlı</div></div>
+          <span class="cc-badge badge-v" style="cursor:pointer;">Tümünü gör →</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 532 *** 4821</div>
+          <div class="call-agent">Kaya · Destek</div>
+          <div class="call-dur">3:12</div>
+          <span class="call-badge cb-ok">Çözüldü</span>
+          <span class="call-mood">😊</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 541 *** 0093</div>
+          <div class="call-agent">Eren · Randevu</div>
+          <div class="call-dur">1:48</div>
+          <span class="call-badge cb-ok">Çözüldü</span>
+          <span class="call-mood">😊</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 505 *** 7734</div>
+          <div class="call-agent">Kaya · Destek</div>
+          <div class="call-dur">5:01</div>
+          <span class="call-badge cb-tr">Aktarıldı</span>
+          <span class="call-mood">😐</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 554 *** 2210</div>
+          <div class="call-agent">Ayşe · Satış</div>
+          <div class="call-dur">2:20</div>
+          <span class="call-badge cb-ok">Çözüldü</span>
+          <span class="call-mood">😊</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 532 *** 8812</div>
+          <div class="call-agent">Eren · Randevu</div>
+          <div class="call-dur">0:55</div>
+          <span class="call-badge cb-ms">Kaçırıldı</span>
+          <span class="call-mood">—</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 544 *** 3301</div>
+          <div class="call-agent">Kaya · Destek</div>
+          <div class="call-dur">4:33</div>
+          <span class="call-badge cb-ok">Çözüldü</span>
+          <span class="call-mood">😊</span>
+        </div>
+        <div class="call-row">
+          <div class="call-num">+90 551 *** 7729</div>
+          <div class="call-agent">Ayşe · Satış</div>
+          <div class="call-dur">3:47</div>
+          <span class="call-badge cb-ok">Çözüldü</span>
+          <span class="call-mood">😄</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ── CHART DEFAULTS ──
+Chart.defaults.color = '#8888aa';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = 'Geist, sans-serif';
+Chart.defaults.font.size   = 11;
+
+const V  = '#7c5cfc';
+const V2 = '#9d82ff';
+const T  = '#00e5b0';
+const A  = '#fbbf24';
+const R  = '#fb7185';
+
+// ── SPARKLINES ──
+function spark(id, data, color){
+  new Chart(document.getElementById(id), {
+    type:'line',
+    data:{
+      labels: data.map((_,i)=>i),
+      datasets:[{
+        data, borderColor: color, borderWidth: 1.5,
+        fill: true,
+        backgroundColor: color.replace(')',', 0.08)').replace('rgb','rgba'),
+        tension: 0.4, pointRadius: 0,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}},
+      animation:{duration:1200},
+    }
+  });
+}
+
+spark('spark1',[210,240,195,280,310,290,340,380,355,410,390,430],V);
+spark('spark2',[30,42,38,55,62,58,70,84,78,95,88,104],T);
+spark('spark3',[8,12,10,16,18,14,22,26,20,30,28,34],A);
+spark('spark4',[800,1100,950,1400,1600,1450,1800,2100,1900,2600,2400,2820],R);
+
+// ── ÇAĞRI & RANDEVU TRENDİ ──
+const days = ['1 May','5','10','15','20','25','30 May','5 Haz','10','15','20','21'];
+new Chart(document.getElementById('chart-calls'),{
+  type:'line',
+  data:{
+    labels: days,
+    datasets:[
+      {
+        label:'Çağrı',
+        data:[180,210,195,240,280,260,310,340,320,380,360,410],
+        borderColor:V, borderWidth:2,
+        backgroundColor:'rgba(124,92,252,0.08)',
+        fill:true, tension:0.4, pointRadius:3,
+        pointBackgroundColor:V, pointBorderWidth:0,
+      },
+      {
+        label:'Randevu',
+        data:[28,35,30,42,50,46,58,64,60,72,68,78],
+        borderColor:T, borderWidth:2,
+        backgroundColor:'rgba(0,229,176,0.06)',
+        fill:true, tension:0.4, pointRadius:3,
+        pointBackgroundColor:T, pointBorderWidth:0,
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true, position:'top', align:'end',
+        labels:{boxWidth:8, boxHeight:8, borderRadius:4, padding:16, usePointStyle:true}},
+      tooltip:{
+        backgroundColor:'#0e0e1a', borderColor:'rgba(255,255,255,0.1)',
+        borderWidth:1, padding:10, cornerRadius:8,
+      }
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{maxTicksLimit:6}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{maxTicksLimit:5}},
+    },
+    animation:{duration:1000},
+  }
+});
+
+// ── GELİR / GİDER ──
+new Chart(document.getElementById('chart-revenue'),{
+  type:'bar',
+  data:{
+    labels:['Oca','Şub','Mar','Nis','May','Haz'],
+    datasets:[
+      {
+        label:'Gelir',
+        data:[2800,3200,2950,3800,4200,4820],
+        backgroundColor:'rgba(124,92,252,0.7)',
+        borderRadius:5, borderSkipped:false,
+      },
+      {
+        label:'Gider',
+        data:[1200,1350,1100,1450,1500,1610],
+        backgroundColor:'rgba(251,113,133,0.5)',
+        borderRadius:5, borderSkipped:false,
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true, position:'top', align:'end',
+        labels:{boxWidth:8,boxHeight:8,borderRadius:4,padding:12,usePointStyle:true}},
+      tooltip:{
+        backgroundColor:'#0e0e1a',borderColor:'rgba(255,255,255,0.1)',
+        borderWidth:1,padding:10,cornerRadius:8,
+        callbacks:{label:ctx=>'$'+ctx.raw.toLocaleString()}
+      }
+    },
+    scales:{
+      x:{grid:{display:false}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},
+        ticks:{callback:v=>'$'+v.toLocaleString(), maxTicksLimit:5}},
+    },
+    animation:{duration:1000},
+  }
+});
+
+// ── ÇÖZÜM DONUT ──
+new Chart(document.getElementById('chart-donut'),{
+  type:'doughnut',
+  data:{
+    labels:['Çözüldü','Aktarıldı','Yarım'],
+    datasets:[{
+      data:[87,9,4],
+      backgroundColor:[T,'rgba(251,191,36,0.8)','rgba(68,68,90,0.6)'],
+      borderWidth:0, hoverOffset:4,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    cutout:'72%',
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#0e0e1a',borderColor:'rgba(255,255,255,0.1)',
+        borderWidth:1,padding:8,cornerRadius:8,
+        callbacks:{label:ctx=>ctx.label+': %'+ctx.raw}
+      }
+    },
+    animation:{duration:1200, animateRotate:true},
+  }
+});
+
+// ── ÜRÜN SATIŞI ──
+new Chart(document.getElementById('chart-sales'),{
+  type:'bar',
+  data:{
+    labels:['Sağlık','Emlak','E-tic','Sigorta','Eğitim','Diğer'],
+    datasets:[{
+      data:[94,76,58,42,38,34],
+      backgroundColor:[
+        'rgba(124,92,252,0.75)',
+        'rgba(0,229,176,0.7)',
+        'rgba(251,191,36,0.7)',
+        'rgba(251,113,133,0.7)',
+        'rgba(96,165,250,0.7)',
+        'rgba(68,68,90,0.6)',
+      ],
+      borderRadius:5, borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#0e0e1a',borderColor:'rgba(255,255,255,0.1)',
+        borderWidth:1,padding:8,cornerRadius:8,
+      }
+    },
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{maxTicksLimit:4}},
+      y:{grid:{display:false}},
+    },
+    animation:{duration:1000},
+  }
+});
+
+// ── SAATLİK YOĞUNLUK ──
+const hours=['08','09','10','11','12','13','14','15','16','17','18','19','20'];
+new Chart(document.getElementById('chart-hourly'),{
+  type:'bar',
+  data:{
+    labels: hours.map(h=>h+':00'),
+    datasets:[{
+      data:[12,28,45,62,58,70,88,74,65,52,38,24,14],
+      backgroundColor: hours.map((_,i)=>
+        i===6 ? 'rgba(124,92,252,0.85)' : 'rgba(124,92,252,0.35)'
+      ),
+      borderRadius:4, borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#0e0e1a',borderColor:'rgba(255,255,255,0.1)',
+        borderWidth:1,padding:8,cornerRadius:8,
+        callbacks:{label:ctx=>ctx.raw+' çağrı'}
+      }
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{maxTicksLimit:6}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{maxTicksLimit:4}},
+    },
+    animation:{duration:1000},
+  }
+});
+
+// ── PERIOD BUTONLARI ──
+function setPeriod(btn, period){
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ── BİLDİRİMLER ──
+const NOTIFS = [
+  { id:1, icon:'📅', bg:'rgba(0,229,176,.12)', title:'Yeni Randevu Alındı', sub:'Ahmet Yılmaz · Yarın 10:00 için randevu oluşturuldu', time:'2 dk önce', unread:true },
+  { id:2, icon:'📞', bg:'rgba(251,113,133,.12)', title:'Kaçırılan Çağrı', sub:'+90 532 *** 4821 · Kaya ajanı meşguldü', time:'5 dk önce', unread:true },
+  { id:3, icon:'💬', bg:'rgba(251,191,36,.12)', title:'Yeni Mesaj', sub:'Müşteri memnuniyeti anketi yanıtlandı — ⭐⭐⭐⭐⭐', time:'12 dk önce', unread:true },
+  { id:4, icon:'🛒', bg:'rgba(124,92,252,.12)', title:'Satış Tamamlandı', sub:'Ayşe Ajanı · Profesyonel paket satışı — $150', time:'18 dk önce', unread:true },
+  { id:5, icon:'⚠️', bg:'rgba(251,191,36,.12)', title:'Entegrasyon Uyarısı', sub:'CRM bağlantısı kesildi, yeniden bağlanılıyor...', time:'32 dk önce', unread:true },
+  { id:6, icon:'📅', bg:'rgba(0,229,176,.12)', title:'Randevu İptal Edildi', sub:'Fatma Kaya · 15:30 randevusu iptal', time:'45 dk önce', unread:false },
+  { id:7, icon:'📞', bg:'rgba(124,92,252,.12)', title:'Çağrı Özeti Hazır', sub:'Bugünkü 248 çağrının analizi tamamlandı', time:'1 sa önce', unread:false },
+  { id:8, icon:'💬', bg:'rgba(251,191,36,.12)', title:'3 Yeni Mesaj', sub:'Müşteri destek ekibinden bekleyen mesajlar', time:'2 sa önce', unread:false },
+];
+
+let notifPanelOpen = false;
+
+function renderNotifList(){
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+  list.innerHTML = NOTIFS.map(n=>`
+    <div class="notif-item ${n.unread?'unread':''}" onclick="readNotif(${n.id})">
+      <div class="notif-icon" style="background:${n.bg}">${n.icon}</div>
+      <div class="notif-text">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-sub">${n.sub}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${n.unread?'<div style="width:7px;height:7px;border-radius:50%;background:var(--violet);flex-shrink:0;margin-top:4px;"></div>':''}
+    </div>
+  `).join('');
+}
+
+function toggleNotifPanel(){
+  const panel = document.getElementById('notif-panel');
+  notifPanelOpen = !notifPanelOpen;
+  panel.style.display = notifPanelOpen ? 'block' : 'none';
+  if(notifPanelOpen) renderNotifList();
+}
+
+function readNotif(id){
+  const n = NOTIFS.find(x=>x.id===id);
+  if(n && n.unread){
+    n.unread = false;
+    updateBellBadge();
+    renderNotifList();
+  }
+}
+
+function markAllRead(){
+  NOTIFS.forEach(n=>n.unread=false);
+  updateBellBadge();
+  renderNotifList();
+}
+
+function updateBellBadge(){
+  const unread = NOTIFS.filter(n=>n.unread).length;
+  const badge = document.getElementById('bell-badge');
+  if(badge){
+    badge.textContent = unread || '';
+    badge.style.display = unread ? 'flex' : 'none';
+  }
+}
+
+// Dışarı tıklayınca kapat
+document.addEventListener('click', e=>{
+  const panel = document.getElementById('notif-panel');
+  if(notifPanelOpen && panel && !panel.contains(e.target) && !e.target.closest('[onclick="toggleNotifPanel()"]')){
+    notifPanelOpen = false;
+    panel.style.display = 'none';
+  }
+});
+
+// Sidebar bildirim tıklama
+function showNotif(type){
+  const msgs = {
+    ajanlar:  { icon:'🤖', bg:'rgba(124,92,252,.15)', title:'Ajan Durumu', sub:'3 ajan aktif · Kaya 48, Eren 31 eşzamanlı çağrı işliyor' },
+    cagrilar: { icon:'📞', bg:'rgba(251,113,133,.15)', title:'12 Yeni Çağrı', sub:'Son 15 dakikada 12 gelen çağrı — 2 kaçırılan' },
+    randevular:{ icon:'📅', bg:'rgba(0,229,176,.12)', title:'15 Randevu Bekleniyor', sub:'Bugün için 15 randevu var — 3 tanesi iptal riski taşıyor' },
+    mesajlar: { icon:'💬', bg:'rgba(251,191,36,.12)', title:'7 Okunmamış Mesaj', sub:'Müşteri memnuniyeti anketlerinden gelen yanıtlar' },
+    ayarlar:  { icon:'⚙️', bg:'rgba(124,92,252,.12)', title:'Ajan Ayarları', sub:'Son değişiklik 2 gün önce · Tüm ajanlar aktif' },
+    entegrasyon:{ icon:'⚠️', bg:'rgba(251,191,36,.12)', title:'CRM Bağlantı Uyarısı', sub:'HubSpot bağlantısı kesildi — Yeniden bağlanmak için tıkla' },
+  };
+  const m = msgs[type];
+  if(m) showPopup(m.icon, m.bg, m.title, m.sub);
+}
+
+// ── POPUP BİLDİRİM ──
+let popupTimer = null;
+function showPopup(icon, bg, title, sub){
+  let popup = document.getElementById('global-popup');
+  if(!popup){
+    popup = document.createElement('div');
+    popup.id = 'global-popup';
+    popup.className = 'popup-notif';
+    popup.innerHTML = `
+      <div class="pn-icon" id="pn-icon"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="pn-title" id="pn-title"></div>
+        <div class="pn-sub" id="pn-sub"></div>
+      </div>
+      <div class="pn-close" onclick="closePopup()">×</div>
+    `;
+    document.body.appendChild(popup);
+  }
+  document.getElementById('pn-icon').textContent = icon;
+  document.getElementById('pn-icon').style.background = bg;
+  document.getElementById('pn-title').textContent = title;
+  document.getElementById('pn-sub').textContent = sub;
+  popup.classList.add('show');
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(closePopup, 5000);
+}
+
+function closePopup(){
+  const p = document.getElementById('global-popup');
+  if(p) p.classList.remove('show');
+}
+
+// ── OTOMATİK BİLDİRİMLER ──
+const autoNotifs = [
+  { icon:'📞', bg:'rgba(251,113,133,.15)', title:'Yeni Gelen Çağrı', sub:'+90 532 *** '+Math.floor(Math.random()*9000+1000)+' · Kaya ajanına yönlendiriliyor' },
+  { icon:'📅', bg:'rgba(0,229,176,.12)',   title:'Randevu Oluşturuldu', sub:'Mehmet Demir · Yarın 14:30 için randevu alındı' },
+  { icon:'🛒', bg:'rgba(124,92,252,.12)',  title:'Satış Tamamlandı',    sub:'Başlangıç paketi — $89.99 · Ayşe Ajanı' },
+  { icon:'💬', bg:'rgba(251,191,36,.12)',  title:'Müşteri Memnun',      sub:'5 yıldız değerlendirme — "Çok hızlı ve yardımsever!"' },
+  { icon:'📞', bg:'rgba(251,113,133,.15)', title:'Kaçırılan Çağrı',     sub:'+90 541 *** 8832 · Tüm ajanlar meşguldü' },
+];
+
+let autoIdx = 0;
+setInterval(()=>{
+  const n = autoNotifs[autoIdx % autoNotifs.length];
+  // Badge sayısını artır
+  const bellBadge = document.getElementById('bell-badge');
+  if(bellBadge){
+    const cur = parseInt(bellBadge.textContent)||0;
+    bellBadge.textContent = cur+1;
+    bellBadge.style.display='flex';
+  }
+  // Randevu badge'ini artır
+  const randevuBadge = document.getElementById('nb-randevular');
+  if(randevuBadge && autoIdx%3===0){
+    randevuBadge.textContent = parseInt(randevuBadge.textContent)+1;
+  }
+  // Çağrı badge'ini artır
+  const cagrilar = document.getElementById('nb-cagrilar');
+  if(cagrilar && autoIdx%2===0){
+    cagrilar.textContent = parseInt(cagrilar.textContent)+1;
+  }
+  // Popup göster
+  showPopup(n.icon, n.bg, n.title, n.sub);
+  // Bildirim listesine ekle
+  NOTIFS.unshift({
+    id: Date.now(), icon:n.icon, bg:n.bg,
+    title:n.title, sub:n.sub,
+    time:'Şimdi', unread:true
+  });
+  if(notifPanelOpen) renderNotifList();
+  autoIdx++;
+}, 8000);
+
+// ── CANLI GÜNCELLEME (simülasyon) ──
+setInterval(()=>{
+  const rows = document.querySelectorAll('.call-row');
+  if(!rows.length) return;
+  const nums = ['+90 530','90 531','90 542','90 553','90 545'];
+  const agents = ['Kaya · Destek','Eren · Randevu','Ayşe · Satış'];
+  const badges = [
+    '<span class="call-badge cb-ok">Çözüldü</span><span class="call-mood">😊</span>',
+    '<span class="call-badge cb-ok">Çözüldü</span><span class="call-mood">😄</span>',
+    '<span class="call-badge cb-tr">Aktarıldı</span><span class="call-mood">😐</span>',
+  ];
+  const n = nums[Math.floor(Math.random()*nums.length)];
+  const a = agents[Math.floor(Math.random()*agents.length)];
+  const b = badges[Math.floor(Math.random()*badges.length)];
+  const min = Math.floor(Math.random()*5)+1;
+  const sec = String(Math.floor(Math.random()*59)).padStart(2,'0');
+  const last = rows[rows.length-1];
+  last.querySelector('.call-num').textContent = n+' *** '+Math.floor(Math.random()*9000+1000);
+  last.querySelector('.call-agent').textContent = a;
+  last.querySelector('.call-dur').textContent = min+':'+sec;
+  last.innerHTML = last.innerHTML.replace(/<span class="call-badge.*$/s, b);
+}, 4000);
+</script>
+</body>
+</html>
