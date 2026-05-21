@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SesBot TR — Ajan Konfigürasyon Paneli</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
@@ -789,6 +790,12 @@ select{appearance:none;cursor:pointer;padding-right:32px;background-image:url("d
 <script>
 // ── STATE ──
 let currentVoice = {name:'defne', gender:'f', pitch:1.08, rate:0.93, vol:0.95};
+
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://apojflipmxbpojdhutrp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zCGzDVweZqbWxNV7oWizDw_0QvD-1Wi';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentAgentId = null;
 let elevenApiKey = '';
 let elevenConnected = false;
 let currentAudio = null;
@@ -1097,15 +1104,110 @@ function updatePromptPreview(){
 }
 
 // ── KAYDET ──
-function saveConfig(){
-  document.querySelectorAll('.btn-save').forEach(btn=>{
-    const orig = btn.textContent;
-    btn.textContent = '✓ Kaydedildi!';
-    btn.style.background = '#00e5b0';
-    btn.style.color = '#000';
-    setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; btn.style.color=''; }, 2000);
-  });
+async function saveConfig(){
+  const name     = document.getElementById('agent-name').value || 'Kaya';
+  const greeting = document.getElementById('greeting-text').value;
+  const persona  = document.getElementById('persona-text').value;
+  const closing  = document.getElementById('closing-text').value;
+  const hold     = document.getElementById('hold-text').value;
+
+  const salesTags = Array.from(document.querySelectorAll('#sales-tags .tag'))
+    .map(t=>t.childNodes[0].textContent.trim());
+  const badTags = Array.from(document.querySelectorAll('#forbidden-tags .tag'))
+    .map(t=>t.childNodes[0].textContent.trim());
+
+  const agentData = {
+    name,
+    voice_id:    ELEVEN_VOICES[currentVoice.name]?.id || '',
+    greeting,
+    persona,
+    stability:   currentVoice.rate,
+    similarity:  currentVoice.pitch,
+    sales_words: salesTags,
+    bad_words:   badTags,
+    closing,
+    hold_text:   hold,
+    updated_at:  new Date().toISOString(),
+  };
+
+  try {
+    let result;
+    if(currentAgentId){
+      result = await supabase.from('agents').update(agentData).eq('id', currentAgentId);
+    } else {
+      result = await supabase.from('agents').insert([agentData]).select();
+      if(result.data?.[0]) currentAgentId = result.data[0].id;
+    }
+
+    if(result.error) throw result.error;
+
+    // UI güncelle
+    document.querySelectorAll('.btn-save').forEach(btn=>{
+      const orig = btn.textContent;
+      btn.textContent = '✓ Kaydedildi!';
+      btn.style.background = '#00e5b0';
+      btn.style.color = '#000';
+      setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; btn.style.color=''; }, 2000);
+    });
+    showToast('✓ Ajan ayarları Supabase\'e kaydedildi!');
+
+  } catch(err){
+    showToast('Hata: ' + err.message);
+  }
 }
+
+// ── SAYFA AÇILINCA YÜKLE ──
+async function loadAgentConfig(){
+  try {
+    const { data, error } = await supabase
+      .from('agents')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1);
+
+    if(error || !data?.length) return;
+
+    const agent = data[0];
+    currentAgentId = agent.id;
+
+    document.getElementById('agent-name').value    = agent.name || '';
+    document.getElementById('greeting-text').value = agent.greeting || '';
+    document.getElementById('persona-text').value  = agent.persona || '';
+    if(agent.closing) document.getElementById('closing-text').value = agent.closing;
+    if(agent.hold_text) document.getElementById('hold-text').value  = agent.hold_text;
+
+    // Satış kelimeleri
+    if(agent.sales_words?.length){
+      const wrap = document.getElementById('sales-tags');
+      wrap.innerHTML = '';
+      agent.sales_words.forEach(w=>{
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.innerHTML = w+' <div class="tag-x" onclick="this.parentElement.remove()">×</div>';
+        wrap.appendChild(tag);
+      });
+    }
+
+    // Yasak kelimeler
+    if(agent.bad_words?.length){
+      const wrap = document.getElementById('forbidden-tags');
+      wrap.innerHTML = '';
+      agent.bad_words.forEach(w=>{
+        const tag = document.createElement('div');
+        tag.className = 'tag forbidden';
+        tag.innerHTML = w+' <div class="tag-x" onclick="this.parentElement.remove()">×</div>';
+        wrap.appendChild(tag);
+      });
+    }
+
+    showToast('✓ Son kaydedilen ayarlar yüklendi');
+    updatePreview();
+  } catch(err){
+    console.log('Yükleme hatası:', err.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadAgentConfig);
 
 function pick(el){
   document.querySelectorAll('.ac').forEach(c=>c.classList.remove('on'));
