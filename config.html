@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SesBot TR — Ajan Konfigürasyon Paneli</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1118,9 +1119,8 @@ function updatePromptPreview(){
 // ── KAYDET ──
 async function saveConfig(){
   if(!_sb){
-    showToast('⚠ Supabase bağlanıyor, lütfen bekle...');
-    initSupabase();
-    setTimeout(saveConfig, 1000);
+    showToast('⚠ Supabase yükleniyor...');
+    setTimeout(saveConfig, 800);
     return;
   }
   const name     = document.getElementById('agent-name').value || 'Kaya';
