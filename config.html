@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SesBot TR — Ajan Konfigürasyon Paneli</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1118,11 +1117,6 @@ function updatePromptPreview(){
 
 // ── KAYDET ──
 async function saveConfig(){
-  if(!_sb){
-    showToast('⚠ Supabase yükleniyor...');
-    setTimeout(saveConfig, 800);
-    return;
-  }
   const name     = document.getElementById('agent-name').value || 'Kaya';
   const greeting = document.getElementById('greeting-text').value;
   const persona  = document.getElementById('persona-text').value;
@@ -1149,15 +1143,9 @@ async function saveConfig(){
   };
 
   try {
-    let result;
-    if(currentAgentId){
-      result = await _sb.from('agents').update(agentData).eq('id', currentAgentId);
-    } else {
-      result = await _sb.from('agents').insert([agentData]).select();
-      if(result.data?.[0]) currentAgentId = result.data[0].id;
-    }
-
-    if(result.error) throw result.error;
+    // localStorage'a kaydet
+    localStorage.setItem('agent_config', JSON.stringify(agentData));
+    console.log('Kaydedildi:', agentData.name);
 
     // UI güncelle
     document.querySelectorAll('.btn-save').forEach(btn=>{
@@ -1167,7 +1155,7 @@ async function saveConfig(){
       btn.style.color = '#000';
       setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; btn.style.color=''; }, 2000);
     });
-    showToast("✓ Ajan ayarları kaydedildi!");
+    showToast("✓ Ayarlar kaydedildi!");
 
   } catch(err){
     showToast('Hata: ' + err.message);
@@ -1177,16 +1165,9 @@ async function saveConfig(){
 // ── SAYFA AÇILINCA YÜKLE ──
 async function loadAgentConfig(){
   try {
-    const { data, error } = await _sb
-      .from('agents')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1);
-
-    if(error || !data?.length) return;
-
-    const agent = data[0];
-    currentAgentId = agent.id;
+    const saved = localStorage.getItem('agent_config');
+    if(!saved) return;
+    const agent = JSON.parse(saved);
 
     document.getElementById('agent-name').value    = agent.name || '';
     document.getElementById('greeting-text').value = agent.greeting || '';
