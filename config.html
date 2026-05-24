@@ -1208,6 +1208,138 @@ async function loadAgentConfig(){
 
 document.addEventListener('DOMContentLoaded', initSupabase);
 
+// ── CLAUDE CHAT ──
+let claudeKey = '';
+let claudeConnected = false;
+let chatHistory = [];
+
+async function connectClaude(){
+  const key = document.getElementById('anthropic-key').value.trim();
+  if(!key){ showToast('API anahtarı boş!'); return; }
+
+  const btn = document.getElementById('btn-claude-connect');
+  btn.textContent = 'Bağlanıyor...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/claude-test', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ apiKey: key, message: 'Merhaba' })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Hata');
+
+    claudeKey = key;
+    claudeConnected = true;
+
+    const status = document.getElementById('claude-status');
+    status.textContent = '✓ Bağlı';
+    status.style.cssText = 'background:rgba(0,229,176,.15);color:#00e5b0;border:1px solid rgba(0,229,176,.3);font-size:11px;padding:3px 12px;border-radius:10px;margin-left:auto;';
+
+    btn.textContent = '✓ Bağlandı';
+    btn.style.background = '#00e5b0';
+    btn.style.color = '#000';
+
+    // Chat'i aktifleştir
+    document.getElementById('chat-input').disabled = false;
+    document.getElementById('btn-send').disabled = false;
+
+    // İlk mesajı göster
+    const greeting = data.reply || 'Merhaba! Ben Kaya. Size nasıl yardımcı olabilirim?';
+    addMessage('kaya', greeting);
+    chatHistory.push({role:'assistant', content: greeting});
+
+  } catch(err){
+    showToast('Hata: ' + err.message);
+    btn.textContent = 'Tekrar Dene';
+    btn.disabled = false;
+  }
+}
+
+async function sendChat(){
+  if(!claudeConnected){ showToast('Önce Claude API anahtarını gir!'); return; }
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+
+  addMessage('user', msg);
+  chatHistory.push({role:'user', content: msg});
+  input.value = '';
+
+  const btn = document.getElementById('btn-send');
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    const persona  = document.getElementById('txt-persona')?.value || 'Sen Kaya\'sın, samimi bir müşteri temsilcisisin.';
+    const greeting = document.getElementById('txt-greeting')?.value || '';
+    const salesTags = Array.from(document.querySelectorAll('#sales-tags .tag')).map(t=>t.childNodes[0].textContent.trim()).join(', ');
+    const badTags   = Array.from(document.querySelectorAll('#bad-tags .tag')).map(t=>t.childNodes[0].textContent.trim()).join(', ');
+
+    const systemPrompt = persona + 
+      (salesTags ? ' Şu kelimeleri kullan: ' + salesTags + '.' : '') +
+      (badTags ? ' Şu kelimeleri ASLA kullanma: ' + badTags + '.' : '') +
+      ' Kısa ve doğal konuş. Maksimum 3 cümle.';
+
+    const res = await fetch('/api/claude-test', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        apiKey: claudeKey,
+        system: systemPrompt,
+        messages: chatHistory,
+        message: msg
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Hata');
+
+    const reply = data.reply;
+    addMessage('kaya', reply);
+    chatHistory.push({role:'assistant', content: reply});
+
+    // ElevenLabs bağlıysa sesi de çal
+    if(elevenConnected && elevenApiKey){
+      playVoice(activeVoice);
+      // Test metnini geçici güncelle
+      const testInput = document.getElementById('txt-test');
+      if(testInput) testInput.value = reply;
+    }
+
+  } catch(err){
+    addMessage('system', 'Hata: ' + err.message);
+  } finally {
+    btn.textContent = 'Gönder';
+    btn.disabled = false;
+    document.getElementById('chat-input').focus();
+  }
+}
+
+function addMessage(role, text){
+  const box = document.getElementById('chat-box');
+  if(!box) return;
+
+  // İlk placeholder'ı temizle
+  if(box.querySelector('div[style*="text-align:center"]')){
+    box.innerHTML = '';
+  }
+
+  const div = document.createElement('div');
+  div.style.cssText = 'margin-bottom:10px;display:flex;gap:8px;align-items:flex-start;';
+
+  if(role === 'kaya'){
+    div.innerHTML = '<span style="font-size:16px;flex-shrink:0;">♀</span><div style="background:rgba(124,92,252,.1);border-radius:8px;padding:8px 12px;color:#e8e8f0;flex:1;"><strong style="color:#9d82ff;font-size:11px;">KAYA</strong><br>'+text+'</div>';
+  } else if(role === 'user'){
+    div.innerHTML = '<span style="font-size:16px;flex-shrink:0;">👤</span><div style="background:var(--bg2);border-radius:8px;padding:8px 12px;color:#e8e8f0;flex:1;"><strong style="color:#8888aa;font-size:11px;">SİZ</strong><br>'+text+'</div>';
+  } else {
+    div.innerHTML = '<div style="color:#fb7185;font-size:12px;padding:4px 0;">⚠ '+text+'</div>';
+  }
+
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
 function pick(el){
   document.querySelectorAll('.ac').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
