@@ -3,12 +3,13 @@ export default async function handler(req, res) {
 
   const { apiKey, message, messages, system } = req.body;
   if (!apiKey) return res.status(400).json({ error: 'API key eksik' });
-  if (!message) return res.status(400).json({ error: 'Mesaj eksik' });
+
+  // message zorunlu değil — messages listesi varsa oradan al
+  const userMessage = message || (messages && messages.length > 0 ? messages[messages.length-1]?.content : null) || 'Merhaba';
 
   try {
-    const systemPrompt = system || 'Sen Kaya\'sın, SesBot TR yapay zeka müşteri temsilcisi. Türkçe konuş, samimi ve kısa yanıtlar ver. Maksimum 3 cümle.';
-
-    const msgList = messages && messages.length > 0 ? messages : [{ role: 'user', content: message }];
+    const systemPrompt = system || "Sen Kaya'sin, SesBot TR yapay zeka musteri temsilcisi. Turkce konus, samimi ve kisa yanitlar ver. Maksimum 3 cumle.";
+    const msgList = messages && messages.length > 0 ? messages : [{ role: 'user', content: userMessage }];
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -25,15 +26,14 @@ export default async function handler(req, res) {
       }),
     });
 
-    if (response.status === 401) return res.status(401).json({ error: 'Geçersiz API anahtarı' });
+    if (response.status === 401) return res.status(401).json({ error: 'Gecersiz API anahtari' });
     if (!response.ok) {
       const err = await response.text();
       return res.status(response.status).json({ error: err.slice(0, 100) });
     }
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || 'Yanıt alınamadı.';
-
+    const reply = data.content?.[0]?.text || 'Yanit alinamadi.';
     res.json({ reply });
 
   } catch (err) {
