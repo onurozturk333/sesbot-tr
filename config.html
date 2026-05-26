@@ -363,8 +363,8 @@ select{appearance:none;cursor:pointer;padding-right:32px;}
             <div id="chat-placeholder" style="color:var(--faint);text-align:center;padding-top:60px;">Claude API'ye bağlanınca Kaya ile konuşabilirsiniz.</div>
           </div>
           <div style="display:flex;gap:8px;">
-            <input type="text" id="chat-input" placeholder="Kaya'ya bir şey söyle..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;" disabled/>
-            <button onclick="sendChat()" id="btn-send" style="padding:9px 18px;font-size:13px;background:var(--violet);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:Geist,sans-serif;" disabled>Gönder</button>
+            <input type="text" id="chat-input" placeholder="Önce Bağlan butonuna bas..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;"/>
+            <button onclick="sendChat()" id="btn-send" style="padding:9px 18px;font-size:13px;background:var(--violet);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:Geist,sans-serif;">Gönder</button>
           </div>
         </div>
       </div>
