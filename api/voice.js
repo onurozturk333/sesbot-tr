@@ -31,11 +31,11 @@ export default async function handler(req, res) {
   // Türkçe Amazon Polly sesi - Filiz
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="tr-TR" voice="Polly.Filiz">${greeting}</Say>
+  <Say language="tr-TR">${greeting}</Say>
   <Gather input="speech" language="tr-TR" speechTimeout="3" action="/api/voice-respond" method="POST">
-    <Say language="tr-TR" voice="Polly.Filiz">Sizi dinliyorum, buyurun.</Say>
+    <Say language="tr-TR">Sizi dinliyorum, buyurun.</Say>
   </Gather>
-  <Say language="tr-TR" voice="Polly.Filiz">Yanit alamadim. Lutfen tekrar arayin. Iyi gunler!</Say>
+  <Say language="tr-TR">Yanit alamadim. Lutfen tekrar arayin. Iyi gunler!</Say>
 </Response>`;
 
   res.setHeader('Content-Type', 'text/xml; charset=utf-8');
