@@ -238,6 +238,7 @@ body{font-family:'Geist',sans-serif;background:#080810;color:#e8e8f0;min-height:
       <button class="period-btn on" onclick="setPeriod(this,'30g')">30 Gün</button>
       <button class="period-btn" onclick="setPeriod(this,'3a')">3 Ay</button>
       <div class="live-badge"><div class="ld"></div>Canlı</div>
+      <button onclick="makeTestCall()" style="padding:6px 14px;font-size:12px;font-family:Geist,sans-serif;background:rgba(0,229,176,.15);color:#00e5b0;border:1px solid rgba(0,229,176,.3);border-radius:8px;cursor:pointer;">📞 Test Çağrısı</button>
       <!-- Bildirim zili -->
       <div style="position:relative;cursor:pointer;" onclick="toggleNotifPanel()">
         <div style="width:34px;height:34px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;" onmouseover="this.style.borderColor='var(--violet)'" onmouseout="this.style.borderColor='var(--border2)'">🔔</div>
@@ -907,6 +908,36 @@ setInterval(()=>{
   last.querySelector('.call-dur').textContent = min+':'+sec;
   last.innerHTML = last.innerHTML.replace(/<span class="call-badge.*$/s, b);
 }, 4000);
+
+// ── TEST ÇAĞRISI ──
+async function makeTestCall(){
+  const phone = prompt('Aranacak numara (+90 ile başlayan):');
+  if(!phone) return;
+  const btn = document.querySelector('[onclick="makeTestCall()"]');
+  btn.textContent = '⏳ Aranıyor...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/call', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({to: phone})
+    });
+    const data = await res.json();
+    if(data.success){
+      btn.textContent = '✓ Arandı!';
+      btn.style.background = 'rgba(0,229,176,.25)';
+      setTimeout(()=>{ btn.textContent='📞 Test Çağrısı'; btn.disabled=false; btn.style.background=''; }, 5000);
+    } else {
+      alert('Hata: ' + (data.error||'Bilinmeyen hata'));
+      btn.textContent = '📞 Test Çağrısı';
+      btn.disabled = false;
+    }
+  } catch(err){
+    alert('Hata: ' + err.message);
+    btn.textContent = '📞 Test Çağrısı';
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>
