@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SesBot TR — Ödeme Başarılı</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Geist',sans-serif;background:#080810;color:#e8e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;}
+:root{--violet:#7c5cfc;--violet2:#9d82ff;--teal:#00e5b0;--border:rgba(255,255,255,0.07);}
+.box{text-align:center;padding:60px 40px;max-width:480px;}
+.icon{font-size:72px;margin-bottom:24px;animation:pop .5s ease;}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+h1{font-family:'Instrument Serif',serif;font-size:42px;color:#fff;margin-bottom:12px;letter-spacing:-.5px;}
+.sub{font-size:16px;color:#8888aa;margin-bottom:32px;line-height:1.6;}
+.btn{display:inline-block;padding:13px 30px;background:var(--violet);color:#fff;border-radius:30px;text-decoration:none;font-size:14px;font-weight:500;transition:all .2s;box-shadow:0 4px 20px rgba(124,92,252,.4);}
+.btn:hover{background:var(--violet2);transform:translateY(-2px);}
+.plan-badge{display:inline-block;padding:4px 16px;background:rgba(0,229,176,.12);color:var(--teal);border:1px solid rgba(0,229,176,.3);border-radius:20px;font-size:12px;font-weight:600;margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="icon">🎉</div>
+  <div class="plan-badge" id="plan-name">Başlangıç Planı</div>
+  <h1>Hoş geldiniz!</h1>
+  <p class="sub">Ödemeniz başarıyla alındı. SesBot TR'ye erişiminiz aktif edildi. Hemen ajan oluşturmaya başlayabilirsiniz.</p>
+  <a href="/config.html" class="btn">Ajan Paneline Git →</a>
+</div>
+<script>
+const plan = new URLSearchParams(location.search).get('plan');
+const names = { starter:'Başlangıç Planı', professional:'Profesyonel Plan' };
+document.getElementById('plan-name').textContent = names[plan] || 'Plan Aktif';
+</script>
+</body>
+</html>
